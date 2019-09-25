@@ -4,7 +4,7 @@ export default function Post(props) {
     let post = props.post;
     return (
     <div className="post-card"> 
-        <h3> <a href = {post.data.url} target = "_blank" rel="noopener noreferrer"> {post.data.title} </a></h3>
+        <h3> <a href = {post.data.url} target = "_blank" rel="noopener noreferrer" onClick = {props.counter}> {post.data.title} </a></h3>
         <p>Author: {post.data.author} </p> 
         <p>ups: {post.data.ups.toLocaleString('en')} </p>
         <p>{comments(post.data.num_comments.toLocaleString('en'))}</p> 

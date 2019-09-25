@@ -2,8 +2,8 @@ import React from 'react';
 import './App.css';
 import Loading from './Loading';
 import { getSubreddit } from './subredditapi';
-import Post from './Post';
-
+import GetPosts from './GetPosts';
+import SearchForm from './SearchForm';
 
 
 class App extends React.Component {
@@ -12,30 +12,68 @@ class App extends React.Component {
     super();
     this.state = {
       posts:[],
-      loading:true
+      previousSearches:[],
+      count: 0,
+      loading:false
     };
   }
 
-  async componentDidMount() {
-    
-    let posts = await getSubreddit('art');
+  postClick = async () => {
+    this.setState(prevState => ({
+      count: prevState.count + 1
+    }));
+  };
 
-    this.setState({ 
+  handleSearch = async (searchValue) => {
+    this.setState({ loading: true });
+
+    let posts = await getSubreddit(searchValue)
+
+    this.setState(oldState => ({ 
+      someValue: oldState.someValue + 1,
       posts : posts.data.children, 
       subredditSubscribers: posts.data.children[0].data.subreddit_subscribers.toLocaleString('en'),
       subreddit: posts.data.children[0].data.subreddit,
-      loading:false });
-  }
+      previousSearches: [...oldState.previousSearches, searchValue],
+      loading:false }))
+  };
+
+  applyPreviousSearch = async (previousSearchValue) => {
+    this.setState({ loading: true });
+
+    let previousPosts = await getSubreddit(previousSearchValue)
+
+    this.setState(oldState => ({ 
+      someValue: oldState.someValue + 1,
+      posts : previousPosts.data.children, 
+      subredditSubscribers: previousPosts.data.children[0].data.subreddit_subscribers.toLocaleString('en'),
+      subreddit: previousPosts.data.children[0].data.subreddit,
+      previousSearches: [...oldState.previousSearches],
+      loading:false }))
+      //which part of this function is checking whether a value has been searched before?
+  };
+
 
   render() {
     return (
+      <div>
+        <SearchForm onSearch={this.handleSearch} />
+        {this.state.loading && <Loading/>}
+        <p>Read Count: {this.state.count} </p>
         <div>
-          <h3>You're on the {this.state.subreddit} page. </h3>
-          <p>Subreddit Subscribers: {this.state.subredditSubscribers}</p>
-         {this.state.loading ? <Loading/> : this.state.posts.map((post) => {
-            return <Post post={post} key={post.data.id} />
+         <p>Subreddit Subscribers: {this.state.subredditSubscribers}</p>
+         <p>Previous Searches:</p> {this.state.previousSearches.map((term) => {
+             return (
+              <button type="button" onClick={this.applyPreviousSearch.bind(this, term)}>
+              {term}
+               </button>
+             );
           })}
+          <GetPosts posts={this.state.posts} countProp = {this.postClick} /> 
+        
         </div>
+      </div>
+       
     );
   }
 }
